@@ -211,10 +211,19 @@ Build U-Boot
 
    Several prebuilt images are required from the TI Processor SDK for building U-Boot on K3 based platforms.
 
-   - TF-A (BL31): Refer to :ref:`foundational-components-atf` for more information
-   - OP-TEE (TEE): Refer to :ref:`foundational-components-optee` for more information
-   - ti-linux-firmware (BINMAN_INDIRS): Prebuilt binaries for DM and SYSFW available `here
-     <https://git.ti.com/cgit/processor-firmware/ti-linux-firmware/log/?h=ti-linux-firmware>`_.
+   .. ifconfig:: CONFIG_part_variant not in ('AM62LX')
+
+      - TF-A (BL31): Refer to :ref:`foundational-components-atf` for more information
+      - OP-TEE (TEE): Refer to :ref:`foundational-components-optee` for more information
+      - ti-linux-firmware (BINMAN_INDIRS): Prebuilt binaries for DM and SYSFW available `here
+        <https://git.ti.com/cgit/processor-firmware/ti-linux-firmware/log/?h=ti-linux-firmware>`_.
+
+   .. ifconfig:: CONFIG_part_variant in ('AM62LX')
+
+      - TF-A (**BL1** and **BL31**): Refer to :ref:`foundational-components-atf`
+        for more information
+      - ti-linux-firmware (**BINMAN_INDIRS**): Prebuilt TIFS binaries are
+        available `here <https://git.ti.com/cgit/processor-firmware/ti-linux-firmware/?h=ti-linux-firmware>`__.
 
    All of these are available in the SDK at ``<path to tisdk>/board-support/prebuilt-images>``
 
@@ -586,11 +595,12 @@ Build U-Boot
 
    .. ifconfig:: CONFIG_part_variant in ('AM62LX')
 
-      +-------------+----------------------------------+----------------------------------------------------------+
-      |  Board      |            SD Boot               |                       USB DFU                            |
-      +=============+==================================+==========================================================+
-      |  AM62LX EVM |   ``am62lx_evm_defconfig``       |             ``am62lx_evm_defconfig``                     |
-      +-------------+----------------------------------+----------------------------------------------------------+
+   .. ifconfig:: CONFIG_part_variant in ('AM62LX')
+
+      .. csv-table::
+         :header: "Board","SD/eMMC UART OSPI USB-DFU USB-MSC"
+
+         "AM62LX EVM", "am62lx_evm_defconfig"
 
       .. note::
 
@@ -602,21 +612,27 @@ Build U-Boot
 
       .. code-block:: console
 
-         $ export UBOOT_DIR=<path-to-ti-u-boot>
          $ export TI_LINUX_FW_DIR=<path-to-ti-linux-firmware>
          $ export TFA_DIR=<path-to-arm-trusted-firmware>
 
       .. note::
 
-         The instructions below assume all binaries are built manually. For instructions to build bl31.bin go to: :ref:`foundational-components-optee`.
-         For instructions to build tee-pager_v2.bin (bl32.bin) go to: :ref:`foundational-components-atf`. BINMAN_INDIRS can point to
-         <path-to-tisdk>/board-support/prebuilt-images to use the pre-built binaries that come in the pre-built SDK (bl31.bin for BL31, bl32.bin for TEE).
+         The instructions below assume all binaries are built manually.
+         For instructions to build bl1.bin or bl31.bin go to:
+         :ref:`foundational-components-atf`.
+
+         **BINMAN_INDIRS** can point to
+         ``<path-to-tisdk>/board-support/prebuilt-images`` to use the
+         pre-built binaries that come in the pre-built SDK.
 
       .. code-block:: console
 
-         To build tiboot.bin, tispl.bin and u-boot.img. Saved in $UBOOT_DIR/out/a53. Requires bl1.bin, bl31.bin.
-         $ make ARCH=arm CROSS_COMPILE="$CROSS_COMPILE_64" am62lx_evm_defconfig O=$UBOOT_DIR/out/a53
-         $ make ARCH=arm CROSS_COMPILE="$CROSS_COMPILE_64" CC="$CC_64" BL1=$TFA_DIR/build/k3/am62l/release/bl1.bin BL31=$TFA_DIR/build/k3/am62l/release/bl31.bin O=$UBOOT_DIR/out/a53 BINMAN_INDIRS=$TI_LINUX_FW_DIR
+         # build all bootfirmware phases
+         $ make CROSS_COMPILE="$CROSS_COMPILE_64" am62lx_evm_defconfig
+         $ make CROSS_COMPILE="$CROSS_COMPILE_64" \
+            BL1=$TFA_DIR/build/k3/lite/release/bl1.bin \
+            BL31=$TFA_DIR/build/k3/lite/release/bl31.bin \
+            BINMAN_INDIRS=$TI_LINUX_FW_DIR
 
 .. ifconfig:: CONFIG_part_variant not in ('AM64X', 'AM62X', 'AM62AX', 'AM62LX')
 
@@ -634,7 +650,10 @@ Build U-Boot
 
      .. note::
 
-      BINMAN_INDIRS is used to fetch the SYSFW binaries from <path to ti-linux-firmware>/ti-sysfw/. If using the SDK, BINMAN_INDIRS can point to <path to SDK>/board-support/prebuilt-images. Else any folder where SYSFW binaries are present in <path to folder>/ti-sysfw/ can be used. Please make sure to use the absolute path.
+      BINMAN_INDIRS is used to fetch the TIFS binaries from <path to ti-linux-firmware>/ti-sysfw/.
+      If using the SDK, BINMAN_INDIRS can point to <path to SDK>/board-support/prebuilt-images.
+      Else any folder where SYSFW binaries are present in <path to folder>/ti-sysfw/ can be used.
+      Please make sure to use the absolute path.
 
 .. ifconfig:: CONFIG_part_variant in ('J721E', 'J7200', 'AM62X', 'AM62AX', 'AM62PX', 'J721S2', 'J784S4','J742S2', 'J722S')
 
@@ -642,7 +661,7 @@ Build U-Boot
 
       It is also possible to pick up a custom DM binary by adding TI_DM argument pointing to the file. If not provided, it defaults to picking up the DM binary from BINMAN_INDIRS. This is only applicable to devices that utilize split firmware.
 
-.. ifconfig:: CONFIG_part_variant in ('AM65X', 'J721E', 'J7200', 'AM64X', 'AM62X', 'AM62AX', 'AM62PX', 'J721S2', 'J784S4','J742S2', 'J722S')
+.. ifconfig:: CONFIG_part_variant in ('AM65X', 'J721E', 'J7200', 'AM64X', 'AM62X', 'AM62AX', 'AM62LX', 'AM62PX', 'J721S2', 'J784S4','J742S2', 'J722S')
 
    .. rubric:: Target Images
       :name: target-images
@@ -822,6 +841,14 @@ Build U-Boot
          * tiboot3-j722s-hs-evm.bin from <output directory>/r5
          * tispl.bin, u-boot.img from <output directory>/a53
 
+.. ifconfig:: CONFIG_part_variant in ('AM62LX')
+
+       * **HS-FS**
+
+         * tiboot3-am62lx-hs-fs-evm.bin
+         * tispl.bin
+         * u-boot.img
+
 .. ifconfig:: CONFIG_part_variant in ('AM65X', 'J721E', 'J7200', 'AM64X', 'AM62X', 'AM62AX', 'AM62PX', 'J721S2', 'J784S4','J742S2', 'J722S')
 
    .. warning::
@@ -832,7 +859,7 @@ Build U-Boot
 Image Formats
 ^^^^^^^^^^^^^^^
 
-    .. ifconfig:: CONFIG_part_variant not in ('J7200', 'AM64X', 'J721S2', 'J721E', 'AM62X', 'AM62AX', 'J784S4','J742S2', 'J722S')
+    .. ifconfig:: CONFIG_part_variant not in ('J7200', 'AM64X', 'J721S2', 'J721E', 'AM62X', 'AM62AX', 'AM62LX', 'J784S4','J742S2', 'J722S')
 
        - tiboot3.bin
 
@@ -1164,6 +1191,56 @@ Image Formats
             | +-------------------+ |
             +-----------------------+
 
+    .. ifconfig:: CONFIG_part_variant in ('AM62LX')
+
+       The AM62Lx, unlike most K3 SoCs, utilizes a 2 phase ROM boot. The first
+       phase uses TF-A's BL1 and a smaller TIFS stub to initialize the console
+       and the DDR controller before waiting to be reset back into ROM code to
+       load the second boot phase.
+
+       .. code-block:: text
+
+              TIBOOT3
+          ┌─────────────┐
+          │    X.509    │
+          │ Certificate │
+          │┌───────────┐│
+          ││   BL-1    ││
+          │├───────────┤│
+          ││   TIFS    ││
+          │├───────────┤│
+          ││ TIFS CERT ││
+          │└───────────┘│
+          └─────────────┘
+
+       The second phase uses the same X.509 certificate authentication
+       mechanism to authenticate and configure ROM to load TF-A, TIFS
+       firmware along with TIFS's board and security configuration and a
+       U-Boot SPL into memory. These binaries can then load U-Boot
+       proper which can configure the system to load the high level
+       operating system.
+
+       .. code-block:: text
+
+               TISPL
+          ┌─────────────┐
+          │    X.509    │
+          │ Certificate │
+          │┌───────────┐│
+          ││   BL-31   ││
+          │├───────────┤│
+          ││   TIFS    ││
+          │├───────────┤│
+          ││ TIFS CERT ││
+          │├───────────┤│
+          ││ BRD + SEC ││
+          ││  CONFIGS  ││
+          │├───────────┤│
+          ││  U-BOOT   ││
+          ││    SPL    ││
+          │└───────────┘│
+          └─────────────┘
+
 Boot Flow
 ^^^^^^^^^
 .. ifconfig:: CONFIG_part_family in ('General_family', 'AM335X_family', 'AM437X_family')
@@ -1241,7 +1318,7 @@ Boot Flow
     specific device tree blob (DTB) as an argument to U-Boot's **bootz**
     command that will extract and start the actual kernel.
 
-.. ifconfig:: CONFIG_part_family not in ('General_family', 'AM335X_family', 'AM437X_family')
+.. ifconfig:: CONFIG_part_family not in ('General_family', 'AM335X_family', 'AM437X_family', 'AM62LX_family')
 
     On K3 architecture based devices, ROM supports boot only via MCU(R5). This means that
     bootloader has to run on R5 core. In order to meet this constraint, keeping
@@ -1651,6 +1728,116 @@ Boot Flow
     Here |__SYSFW_CORE_NAME__| acts as master and provides all the critical services. R5/ARM64
     requests |__SYSFW_CORE_NAME__| to get these services done as shown in the above diagram.
 
+.. ifconfig:: CONFIG_part_variant in ('AM62LX')
+
+   Unlike with most other K3 SoCs the AM62LX does not have an Cortext-R5
+   MCU core which ROM uses to initialize the SoC therefore uses a 2
+   phase ROM boot. The first phase will load the tiboot3.bin image which
+   contains Trusted-Firmware-A's BL1 loader along with the typical X.509
+   certificate to authenticate and validate the image which is used to
+   intialize the console and DDR for the next phase.
+
+   .. code-block:: text
+
+      ┌───────────────────┐┌───────────────────┐
+      │    Secure ROM     ││    Public ROM     │
+      │     SMS (M4)      ││   (Cortex-A53)    │
+      │                   ││                   │
+      │┌─────────────────┐││                   │
+      ││  Reset Release  │││                   │
+      │└────────┬────────┘││                   │
+      │         │         ││                   │
+      │┌────────▼────────┐││                   │
+      ││    ROM Init     │││                   │
+      │└────────┬────────┘││                   │
+      │         │         ││                   │
+      │┌────────▼────────┐││┌─────────────────┐│
+      ││   Release A53   ┼┼┼►   Release A53   ││
+      │└─────────────────┘││└────────┬────────┘│
+      │                   ││         │         │
+      │  Validate Image   ││┌────────▼────────┐│
+      │┌─────────────────┐│││    ROM Init     ││
+      ││ Integrity Check ◄┼┼┼   (1st Phase)   ││
+      │├─────────────────│││└────────┬────────┘│
+      ││ Authentication  │││         │         │
+      │├─────────────────┤││┌────────▼────────┐│
+      ││    Decryption   ││││       WFI       ││
+      │└────────┬────────┘││└─────────────────┘│
+      │         │         ││                   │
+      │┌────────▼────────┐││    End of ROM     │
+      ││  Wait for WFI   │││~~~~~~~~~~~~~~~~~~~│
+      ││  on Cortex-A53  │││     Start of      │
+      │└────────┬────────┘││       BL-1        │
+      │         │         ││                   │
+      │┌────────▼────────┐││┌─────────────────┐│
+      ││    Start BL-1   ┼┼┼►    DDR Init     ││
+      │└────────┬────────┘││└────────┬────────┘│
+      │         │         ││         │         │
+      │┌────────▼────────┐││┌────────▼────────┐│
+      ││  Wait for BL-1  ◄┼┼┼  Send BL 1 Done ││
+      ││     Done Msg    │││└────────┬────────┘│
+      │└─────────────────┘││         │         │
+      │                   ││┌────────▼────────┐│
+      │                   │││       WFI       ││
+      │                   ││└─────────────────┘│
+      └───────────────────┘└───────────────────┘
+
+   After the BL1 sends a message back to the Secure ROM to indicate it
+   has completed, the Secure ROM will reset the A53 back into Public ROM
+   to begin the 2nd ROM boot phase to load the tispl.bin into the SoC.
+
+   .. code-block:: text
+
+      ┌───────────────────┐┌───────────────────┐
+      │    Secure ROM     ││    Public ROM     │
+      │     SMS (M4)      ││   (Cortex-A53)    │
+      │                   ││                   │
+      │┌─────────────────┐││                   │
+      ││  Program Reset  │││┌─────────────────┐│
+      ││   Vector And    ┼┼┼►   Release A53   ││
+      ││    Reset A53    │││└────────┬────────┘│
+      │└─────────────────┘││         │         │
+      │                   ││         │         │
+      │   Validate Image  ││┌────────▼────────┐│
+      │┌─────────────────┐│││    ROM Init     ││
+      ││ Integrity Check ◄┼┼┼   (2nd Phase)   ││
+      │├─────────────────┤││└────────┬────────┘│
+      ││ Authentication  │││         │         │
+      │├─────────────────┤││┌────────▼────────┐│
+      ││   Decryption    ││││       WFI       ││
+      │└────────┬────────┘││└─────────────────┘│
+      │         │         ││                   │
+      │┌────────▼────────┐││     End of ROM    │
+      ││  Wait for WFI   │││~~~~~~~~~~~~~~~~~~~│
+      ││  on Cortex-A53  │││                   │
+      │└────────┬────────┘││                   │
+      │         │         ││                   │
+      │┌────────▼────────┐││                   │
+      ││  Program Reset  │││┌─────────────────┐│
+      ││   Vector And    ┼┼┼►   TF-A (BL-31)  ││
+      ││    Reset A53    │││└────────┬────────┘│
+      │└────────┬────────┘││         │         │
+      │         │         ││┌────────▼────────┐│
+      │┌────────▼────────┐│││    U-Boot SPL   ││
+      ││  Prep M4 Reset  │││└────────┬────────┘│
+      │└────────┬────────┘││         │         │
+      │         │         ││┌────────▼────────┐│
+      │┌────────▼────────┐│││     U-Boot      ││
+      ││    Boot TI-FS   │││└────────┬────────┘│
+      │└────────┬────────┘││         │         │
+      │         │         ││         │         │
+      │     End of ROM    ││         │         │
+      │~~~~~~~~~~~~~~~~~~~││         │         │
+      │         │         ││┌────────▼────────┐│
+      │┌────────▼────────┐│││                 ││
+      ││                 ││││                 ││
+      ││      TI-FS      ││││      Linux      ││
+      └┴─────────────────┴┘└┴─────────────────┴┘
+
+   From there TIFS, TF-A and U-Boot will has completed their
+   initialization routines which can begin loading the operating system
+   and complete the boot process.
+
 U-Boot Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1789,197 +1976,228 @@ to be loaded from the same media as the kernel, and from the same relative path.
 
 .. _AM64-SRAM-Layout-label:
 
-SRAM memory Layout during R5 SPL bootloader stage
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SRAM memory Layout during initial bootloader stage
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The SRAM memory layout explains the memory used for Bootloader's operation.
 
-    .. ifconfig:: CONFIG_part_variant in ('AM64X')
+.. ifconfig:: CONFIG_part_variant in ('AM64X')
 
-        .. code-block:: text
+  .. code-block:: text
 
-            ┌──────────────────────────────────────┐0x70000000
-            │                                      │
-            │                                      │
-            │                                      │
-            │    SPL IMAGE (Max size 1.5 MB)       │
-            │                                      │
-            │                                      │
-            │                                      │
-            ├──────────────────────────────────────┤0x7017FFFF
-            │                                      │
-            │           SPL STACK                  │
-            │                                      │
-            ├──────────────────────────────────────┤0x70192727
-            │          GLOBAL DATA(216 B)          │
-            ├──────────────────────────────────────┤0x701927FF
-            │                                      │
-            │       INITIAL HEAP (32 KB)           │
-            │                                      │
-            ├──────────────────────────────────────┤0x7019A7FF
-            │                                      │
-            │          BSS  (20 KB)                │
-            ├──────────────────────────────────────┤0x7019F7FF
-            │         EEPROM DATA (2 KB)           │
-            ├──────────────────────────────────────┤0x7019FFFF
-            │                                      │
-            │                                      │
-            │     UNALLOCATED AREA (123 KB)        │
-            │                                      │
-            │                                      │
-            ├──────────────────────────────────────┤0x701BEBFB
-            │   BOOT PARAMETER INDEX TABLE (5124 B)│
-            ├──────────────────────────────────────┤0x701BFFFF
-            │                                      │
-            │             TF-A (128 KB)            │
-            │                                      │
-            ├──────────────────────────────────────┤0x701DFFFF
-            │                                      │
-            │      DMSC CODE AREA (128 KB)         │
-            │                                      │
-            └──────────────────────────────────────┘0x701FFFFF
+      ┌──────────────────────────────────────┐0x70000000
+      │                                      │
+      │                                      │
+      │                                      │
+      │    SPL IMAGE (Max size 1.5 MB)       │
+      │                                      │
+      │                                      │
+      │                                      │
+      ├──────────────────────────────────────┤0x7017FFFF
+      │                                      │
+      │           SPL STACK                  │
+      │                                      │
+      ├──────────────────────────────────────┤0x70192727
+      │          GLOBAL DATA(216 B)          │
+      ├──────────────────────────────────────┤0x701927FF
+      │                                      │
+      │       INITIAL HEAP (32 KB)           │
+      │                                      │
+      ├──────────────────────────────────────┤0x7019A7FF
+      │                                      │
+      │          BSS  (20 KB)                │
+      ├──────────────────────────────────────┤0x7019F7FF
+      │         EEPROM DATA (2 KB)           │
+      ├──────────────────────────────────────┤0x7019FFFF
+      │                                      │
+      │                                      │
+      │     UNALLOCATED AREA (123 KB)        │
+      │                                      │
+      │                                      │
+      ├──────────────────────────────────────┤0x701BEBFB
+      │   BOOT PARAMETER INDEX TABLE (5124 B)│
+      ├──────────────────────────────────────┤0x701BFFFF
+      │                                      │
+      │             TF-A (128 KB)            │
+      │                                      │
+      ├──────────────────────────────────────┤0x701DFFFF
+      │                                      │
+      │      DMSC CODE AREA (128 KB)         │
+      │                                      │
+      └──────────────────────────────────────┘0x701FFFFF
 
-        - In the last 128 KB of memory used by DMSC during run time, initial 80 KB
-          gets freed after a security handover happens. The last 48 KB still will be used by DMSC.
-        - For more details on Security handover see `here <https://software-dl.ti.com/tisci/esd/latest/6_topic_user_guides/security_handover.html>`__ .
+  - In the last 128 KB of memory used by DMSC during run time, initial 80 KB
+    gets freed after a security handover happens. The last 48 KB still will be used by DMSC.
+  - For more details on Security handover see `here <https://software-dl.ti.com/tisci/esd/latest/6_topic_user_guides/security_handover.html>`__ .
 
-    .. ifconfig:: CONFIG_part_variant in ('AM62X')
+.. ifconfig:: CONFIG_part_variant in ('AM62X')
 
-        .. code-block:: text
+  .. code-block:: text
 
-            ┌──────────────────────────────────────┐0x43c00000
-            │                                      │
-            │                                      │
-            │               SPL IMAGE              │
-            │           (Max size 192 KB)          │
-            │            (excluding BSS)           │
-            │             (196608B  Max)           │
-            │                                      │
-            ├──────────────────────────────────────┤0x43c30000
-            │                                      │
-            │                                      │
-            │            STACK (13568B Max)        │
-            │                                      │
-            │                                      │
-            ├──────────────────────────────────────┤
-            │         Global Data (428B Max)       │
-            ├──────────────────────────────────────┤
-            │                                      │
-            │            HEAP (28KB Max)           │
-            │                                      │
-            ├──────────────────────────────────────┤0x43c3a7f0
-            │                                      │
-            │             EMPTY (16B)              │
-            │                                      │
-            ├──────────────────────────────────────┤0x43c3a800
-            │                                      │
-            │                                      │
-            │         DM config data (2KB)         │
-            │                                      │
-            │                                      │
-            ├──────────────────────────────────────┤0x43c3b000
-            │                                      │
-            │             BSS (12KB)               │
-            │                                      │
-            ├──────────────────────────────────────┤0x43c3e000
-            │                                      │
-            │                                      │
-            │           EMPTY (4.5KB)              │
-            │        (Reserved for ROM)            │
-            │                                      │
-            ├──────────────────────────────────────┤0x43c3f1e0
-            │                                      │
-            │       ROM Boot parameter table       │
-            │    + Extended boot info (3.5 KB)     │
-            │                                      │
-            └──────────────────────────────────────┘0x43c3ffff
+      ┌──────────────────────────────────────┐0x43c00000
+      │                                      │
+      │                                      │
+      │               SPL IMAGE              │
+      │           (Max size 192 KB)          │
+      │            (excluding BSS)           │
+      │             (196608B  Max)           │
+      │                                      │
+      ├──────────────────────────────────────┤0x43c30000
+      │                                      │
+      │                                      │
+      │            STACK (13568B Max)        │
+      │                                      │
+      │                                      │
+      ├──────────────────────────────────────┤
+      │         Global Data (428B Max)       │
+      ├──────────────────────────────────────┤
+      │                                      │
+      │            HEAP (28KB Max)           │
+      │                                      │
+      ├──────────────────────────────────────┤0x43c3a7f0
+      │                                      │
+      │             EMPTY (16B)              │
+      │                                      │
+      ├──────────────────────────────────────┤0x43c3a800
+      │                                      │
+      │                                      │
+      │         DM config data (2KB)         │
+      │                                      │
+      │                                      │
+      ├──────────────────────────────────────┤0x43c3b000
+      │                                      │
+      │             BSS (12KB)               │
+      │                                      │
+      ├──────────────────────────────────────┤0x43c3e000
+      │                                      │
+      │                                      │
+      │           EMPTY (4.5KB)              │
+      │        (Reserved for ROM)            │
+      │                                      │
+      ├──────────────────────────────────────┤0x43c3f1e0
+      │                                      │
+      │       ROM Boot parameter table       │
+      │    + Extended boot info (3.5 KB)     │
+      │                                      │
+      └──────────────────────────────────────┘0x43c3ffff
 
-    .. ifconfig:: CONFIG_part_variant in ('AM62AX','AM62PX')
+.. ifconfig:: CONFIG_part_variant in ('AM62AX','AM62PX')
 
-        .. code-block:: console
+  .. code-block:: console
 
-            ┌──────────────────────────────────────┐0x43c00000
-            │                                      │
-            │                                      │
-            │               SPL IMAGE              │
-            │           (Max size 188 KB)          │
-            │            (excluding BSS)           │
-            │             (192512B  Max)           │
-            │                                      │
-            ├──────────────────────────────────────┤0x43c2f000
-            │                                      │
-            │                                      │
-            │            STACK (17KB Max)          │
-            │                                      │
-            │                                      │
-            ├──────────────────────────────────────┤
-            │         Global Data (428B Max)       │
-            ├──────────────────────────────────────┤
-            │                                      │
-            │            HEAP (28997B Max)         │
-            │                                      │
-            ├──────────────────────────────────────┤0x43c3a7f0
-            │                                      │
-            │             EMPTY (16B)              │
-            │                                      │
-            ├──────────────────────────────────────┤0x43c3a800
-            │                                      │
-            │                                      │
-            │         DM config data (2KB)         │
-            │                                      │
-            │                                      │
-            ├──────────────────────────────────────┤0x43c3b000
-            │                                      │
-            │             BSS (12KB)               │
-            │                                      │
-            ├──────────────────────────────────────┤0x43c3e000
-            │                                      │
-            │                                      │
-            │           EMPTY (4.5KB)              │
-            │        (Reserved for ROM)            │
-            │                                      │
-            ├──────────────────────────────────────┤0x43c3f1e0
-            │                                      │
-            │       ROM Boot parameter table       │
-            │    + Extended boot info (3.5 KB)     │
-            │                                      │
-            └──────────────────────────────────────┘0x43c3ffff
+      ┌──────────────────────────────────────┐0x43c00000
+      │                                      │
+      │                                      │
+      │               SPL IMAGE              │
+      │           (Max size 188 KB)          │
+      │            (excluding BSS)           │
+      │             (192512B  Max)           │
+      │                                      │
+      ├──────────────────────────────────────┤0x43c2f000
+      │                                      │
+      │                                      │
+      │            STACK (17KB Max)          │
+      │                                      │
+      │                                      │
+      ├──────────────────────────────────────┤
+      │         Global Data (428B Max)       │
+      ├──────────────────────────────────────┤
+      │                                      │
+      │            HEAP (28997B Max)         │
+      │                                      │
+      ├──────────────────────────────────────┤0x43c3a7f0
+      │                                      │
+      │             EMPTY (16B)              │
+      │                                      │
+      ├──────────────────────────────────────┤0x43c3a800
+      │                                      │
+      │                                      │
+      │         DM config data (2KB)         │
+      │                                      │
+      │                                      │
+      ├──────────────────────────────────────┤0x43c3b000
+      │                                      │
+      │             BSS (12KB)               │
+      │                                      │
+      ├──────────────────────────────────────┤0x43c3e000
+      │                                      │
+      │                                      │
+      │           EMPTY (4.5KB)              │
+      │        (Reserved for ROM)            │
+      │                                      │
+      ├──────────────────────────────────────┤0x43c3f1e0
+      │                                      │
+      │       ROM Boot parameter table       │
+      │    + Extended boot info (3.5 KB)     │
+      │                                      │
+      └──────────────────────────────────────┘0x43c3ffff
 
-    .. ifconfig:: CONFIG_part_variant in ('J722S')
+.. ifconfig:: CONFIG_part_variant in ('J722S')
 
-        .. code-block:: console
+  .. code-block:: console
 
-            ┌──────────────────────────────────────┐0x43c00000
-            │                                      │
-            │                                      │
-            │               SPL IMAGE              │
-            │            (excluding BSS)           │
-            │            (0x6ce00 B  Max)          │
-            │                                      │
-            ├──────────────────────────────────────┤0x43C6CE00
-            │              EMPTY (0x50 B)          │
-            │                                      │
-            ├──────────────────────────────────────┤0x43C6CE50
-            │                                      │
-            │                                      │
-            │          STACK (0x5000 B Max)        │
-            │                                      │
-            │                                      │
-            ├──────────────────────────────────────┤0x43C71E50
-            │       Global Data (0x1AC B Max)      │
-            │                 (+0x4)               │
-            │                                      │
-            ├──────────────────────────────────────┤0x43C72000
-            │                                      │
-            │            HEAP (0x9000 B Max)       │
-            |                                      |
-            ├──────────────────────────────────────┤0x43C7B000
-            │                                      │
-            │            SPL BSS (0x3000 B)        │
-            │                                      │
-            ├──────────────────────────────────────┤0x43C7E000
-            │                                      │
-            │       ROM Boot parameter table       │
-            │    + Extended boot info (3.5 KB)     │
-            │                                      │
-            └──────────────────────────────────────┘0x43C7F290
+      ┌──────────────────────────────────────┐0x43c00000
+      │                                      │
+      │                                      │
+      │               SPL IMAGE              │
+      │            (excluding BSS)           │
+      │            (0x6ce00 B  Max)          │
+      │                                      │
+      ├──────────────────────────────────────┤0x43C6CE00
+      │              EMPTY (0x50 B)          │
+      │                                      │
+      ├──────────────────────────────────────┤0x43C6CE50
+      │                                      │
+      │                                      │
+      │          STACK (0x5000 B Max)        │
+      │                                      │
+      │                                      │
+      ├──────────────────────────────────────┤0x43C71E50
+      │       Global Data (0x1AC B Max)      │
+      │                 (+0x4)               │
+      │                                      │
+      ├──────────────────────────────────────┤0x43C72000
+      │                                      │
+      │            HEAP (0x9000 B Max)       │
+      |                                      |
+      ├──────────────────────────────────────┤0x43C7B000
+      │                                      │
+      │            SPL BSS (0x3000 B)        │
+      │                                      │
+      ├──────────────────────────────────────┤0x43C7E000
+      │                                      │
+      │       ROM Boot parameter table       │
+      │    + Extended boot info (3.5 KB)     │
+      │                                      │
+      └──────────────────────────────────────┘0x43C7F290
+
+
+.. ifconfig:: CONFIG_part_variant in ('AM62LX')
+
+ .. code-block:: console
+
+                ┌         ┌────────────────────┐ 0x7081_8000
+                │         │   Debug Buffers    │
+                │         ├────────────────────┤ 0x7081_6000
+                │         │  TIFS ->  A53 IPC  │
+                │         ├────────────────────┤ 0x7081_5000
+                │         │  A53  -> TIFS IPC  │
+                │         ├────────────────────┤ 0x7081_4000
+                │         │    *Free Space*    │
+                │      ┌  ├────────────────────┤ 0x7081_0000
+                │      │  │ Translation Table  │
+                │      │  ├────────────────────┤ 0x7080_D000
+    MSRAM (96k) │      │  │        BSS         │
+                │      │  ├────────────────────┤ 0x7080_B9C0
+                │      │  │       Stack        │
+                │ BL-1 │  ├────────────────────┤ 0x7080_B1C0
+                │      │  │        Data        │
+                │      │  ├────────────────────┤ 0x7080_B000
+                │      │  │      RO-Data       │
+                │      │  ├────────────────────┤ 0x7080_6000
+                │      │  │        Code        │
+                ├      └  ├────────────────────┤ 0x7080_0000
+                │         │                    │
+    PSRAM (64k) │         │      ROM Data      │
+                │         │                    │
+                └         └────────────────────┘ 0x707F_0000
